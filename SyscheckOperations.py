@@ -40,20 +40,20 @@ re_d2x_detect = re.compile(
 re_lazy_full_info = re.compile(r"Info: (.*)\)")  # Group 1 the full "info" line from syscheck
 re_sysmenu = re.compile(r"System Menu (.\..)")
 sysmenu_ios_map = {
-    "4.3":80,
-    "4.2":70,
-    "4.1":60,
-    "4.0":60,
-    "3.5":52,
-    "3.4":50,
-    "3.3":30,
-    "3.2":30,
-    "3.1":30,
-    "3.0":30,
-    "2.2":20,
-    "2.1":11,
-    "2.0":11,
-    "1.0":9,
+    "4.3": 80,
+    "4.2": 70,
+    "4.1": 60,
+    "4.0": 60,
+    "3.5": 52,
+    "3.4": 50,
+    "3.3": 30,
+    "3.2": 30,
+    "3.1": 30,
+    "3.0": 30,
+    "2.2": 20,
+    "2.1": 11,
+    "2.0": 11,
+    "1.0": 9,
 }
 
 
@@ -65,7 +65,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
         if not sysmenu_found:
             match = re_sysmenu.search(entry)
             if match:
-                results.update({"SYSMENU":match.group(1)})
+                results.update({"SYSMENU": match.group(1)})
                 sysmenu_found = True
         match = re_ios_tid.search(entry)
         if match:
@@ -93,6 +93,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
             results.update({ios_tid: cios_detect(entry)})
     return (results, ReturnCodes.NORMAL)
 
+
 def cios_detect(syscheck_entry: str):
     if "d2x" in syscheck_entry:
         return (IOSType.CIOS_D2X, process_d2x(syscheck_entry))
@@ -110,7 +111,13 @@ def process_d2x(syscheck_entry: str) -> dict:
     d2x_ver = d2x_info.group(1)
     d2x_release = d2x_info.group(2)
     d2x_beta_ver = d2x_info.group(3)
-    return {"base":base, "d2x_ver":d2x_ver, "d2x_release":d2x_release, "d2x_beta_ver":d2x_beta_ver}
+    return {
+        "base": base,
+        "d2x_ver": d2x_ver,
+        "d2x_release": d2x_release,
+        "d2x_beta_ver": d2x_beta_ver,
+    }
+
 
 def interactive(infile: pathlib.Path) -> int:
     from pprint import pprint
