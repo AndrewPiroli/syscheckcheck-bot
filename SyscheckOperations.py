@@ -5,11 +5,6 @@ from enum import Enum, auto
 from typing import Iterator, Tuple
 
 
-class ReturnCodes(Enum):
-    NORMAL = 0
-    VWII_NOT_SUPPORTED = 1
-
-
 class IOSType(Enum):
     STUB = 0
     ACTIVE = 1
@@ -39,7 +34,7 @@ re_d2x_detect = re.compile(
 )  # Group 1 d2x version "v10" Group 2 beta or final Group 3 beta version
 re_lazy_full_info = re.compile(r"Info: (.*)\)")  # Group 1 the full "info" line from syscheck
 re_sysmenu = re.compile(r"System Menu (.\..)")
-re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})")
+re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})") # Group 1: HBC version Group 2: HBC IOS
 re_region = re.compile(r"Region: (\w*(\-.)?)")
 re_original_region = re.compile(r"\(original region: (.*)\)")
 sysmenu_ios_map = {
@@ -60,7 +55,7 @@ sysmenu_ios_map = {
 }
 
 
-def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
+def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
     # one time checks
     sysmenu_found = False
     hbc_found = False
@@ -86,13 +81,14 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
                 changed_region = re_original_region.search(entry)
                 if changed_region:
                     results.update({"ORIGINAL_REGION":changed_region.group(1)})
+                continue
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
         else:
             continue
         if vwii_detect in entry:
-            return (None, ReturnCodes.VWII_NOT_SUPPORTED)
+            return None # Not supported
         if stub_detect in entry:
             results.update({ios_tid: (IOSType.STUB, None)})
             continue
@@ -110,7 +106,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
             or (ios_tid != 58 and patch_usb_2_detect in entry)
         ):
             results.update({ios_tid: cios_detect(entry)})
-    return (results, ReturnCodes.NORMAL)
+    return results
 
 
 def cios_detect(syscheck_entry: str) -> Tuple[IOSType, str]:
@@ -160,8 +156,8 @@ def gen_report_for_ios(ios: int, lut: dict) -> str:
     return f"Error generating report for IOS {ios}"
 
 
-def interactive(infile: pathlib.Path) -> int:
-    result, ret = process_syscheck((line for line in open(infile)))
+def interactive(infile: pathlib.Path):
+    result = process_syscheck((line for line in open(infile)))
     try:
         sysmenu = result["SYSMENU"]
         sysmenu_ios = sysmenu_ios_map[sysmenu]
@@ -187,8 +183,6 @@ def interactive(infile: pathlib.Path) -> int:
         print(gen_report_for_ios(hbc_ios, result))
     print(gen_report_for_ios(58, result))
     [print(gen_report_for_ios(n, result)) for n in range(249, 252)]
-    return ret
-
 
 if __name__ == "__main__":
     import argparse
@@ -196,5 +190,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("syscheck_file", help="syscheck.csv to process")
     infile = pathlib.Path(parser.parse_args().syscheck_file).absolute()
-    ret = interactive(infile)
-    sys.exit(ret)
+    interactive(infile)
