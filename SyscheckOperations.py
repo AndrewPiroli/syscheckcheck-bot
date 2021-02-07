@@ -175,6 +175,7 @@ def gen_report_for_ios(ios: int, lut: dict) -> str:
 
 def interactive(infile: pathlib.Path):
     result = process_syscheck((line for line in open(infile)))
+    # These next few lines are cancer, I know, I know
     sysmenu = result["SYSMENU"]
     if sysmenu != "Unknown":
         sysmenu_ios = sysmenu_ios_map[sysmenu]
@@ -200,9 +201,7 @@ def interactive(infile: pathlib.Path):
         print(gen_report_for_ios(sysmenu_ios, result))
     if hbc_ios != 58 and hbc_ios != "Unknown":
         print(gen_report_for_ios(hbc_ios, result))
-    print(gen_report_for_ios(58, result))
-    [print(gen_report_for_ios(n, result)) for n in range(249, 252)]
-    print(gen_report_for_ios(254,result))
+    [print(gen_report_for_ios(n, result)) for n in [58, 249,250,251,254]]
 
 if __name__ == "__main__":
     import argparse
