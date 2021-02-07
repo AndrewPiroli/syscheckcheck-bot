@@ -12,6 +12,7 @@ class IOSType(Enum):
     CIOS_HERMES = 3
     CIOS_WANIKOKO = 4
     CIOS_UNKNOWN = 5
+    BOOTMII_IOS = 6
 
 
 # These are simple substring matches, no reason to bother with regex
@@ -25,6 +26,7 @@ patch_no_patches_detect = "No Patches"
 cios_hermes_detect = "hermes"
 cios_wanikoko_detect = "wanikoko"
 priiloader_detect = "Priiloader installed"
+bootmii_ios_detect = "BootMii"
 # big boy time
 re_ios_tid = re.compile(r"IOS(\d{1,3})")
 re_cios_title_base_detect = re.compile(
@@ -117,6 +119,8 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
             or (ios_tid != 58 and patch_usb_2_detect in entry)
         ):
             results.update({ios_tid: cios_detect(entry)})
+        if ios_tid == 254 and bootmii_ios_detect in entry:
+            results.update({ios_tid:(IOSType.BOOTMII_IOS, None)})
     return results
 
 
@@ -164,6 +168,8 @@ def gen_report_for_ios(ios: int, lut: dict) -> str:
         d2x_release = entry[1]["d2x_release"]
         d2x_beta_ver = entry[1]["d2x_beta_ver"]
         return f"IOS {ios} : d2x cIOS Base: {d2x_base} Version: {d2x_ver} Release: {d2x_release}{d2x_beta_ver}"
+    if entry[0] == IOSType.BOOTMII_IOS:
+        return f"BootMii IOS Installed at tid:{ios}"
     return f"Error generating report for IOS {ios}"
 
 
@@ -194,6 +200,7 @@ def interactive(infile: pathlib.Path):
         print(gen_report_for_ios(hbc_ios, result))
     print(gen_report_for_ios(58, result))
     [print(gen_report_for_ios(n, result)) for n in range(249, 252)]
+    print(gen_report_for_ios(254,result))
 
 if __name__ == "__main__":
     import argparse
