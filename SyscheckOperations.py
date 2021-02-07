@@ -6,13 +6,13 @@ from typing import Iterator, Tuple
 
 
 class IOSType(Enum):
-    STUB = 0
-    ACTIVE = 1
-    CIOS_D2X = 2
-    CIOS_HERMES = 3
-    CIOS_WANIKOKO = 4
-    CIOS_UNKNOWN = 5
-    BOOTMII_IOS = 6
+    STUB = auto()
+    ACTIVE = auto()
+    CIOS_D2X = auto()
+    CIOS_HERMES = auto()
+    CIOS_WANIKOKO = auto()
+    CIOS_UNKNOWN = auto()
+    BOOTMII_IOS = auto()
 
 
 # These are simple substring matches, no reason to bother with regex
