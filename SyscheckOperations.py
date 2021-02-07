@@ -157,19 +157,19 @@ def interactive(infile: pathlib.Path) -> int:
         sysmenu_ios = sysmenu_ios_map[sysmenu]
     except KeyError:
         sysmenu = "?"
-        sysmenu_ios = None
+        sysmenu_ios = "Unknown"
     try:
         hbc = result["HBC"][0]
         hbc_ios = int(result["HBC"][1])
     except KeyError:
         hbc = "?"
-        hbc_ios = None
+        hbc_ios = "Unknown"
     print("---- Quick Report ----")
-    print(f"System Menu version {sysmenu}")
-    print(f"Homebrew Channel version {hbc}")
-    if sysmenu_ios:
+    print(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
+    print(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
+    if sysmenu_ios != "Unknown":
         print(gen_report_for_ios(sysmenu_ios, result))
-    if hbc_ios != 58:
+    if hbc_ios != 58 and hbc_ios != "Unknown":
         print(gen_report_for_ios(hbc_ios, result))
     print(gen_report_for_ios(58, result))
     [print(gen_report_for_ios(n, result)) for n in range(249, 252)]
