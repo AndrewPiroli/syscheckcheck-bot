@@ -90,7 +90,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
             results.update({ios_tid: (IOSType.ACTIVE, None)})
             continue
         if (
-            patch_usb_2_detect in entry and ios_tid == 58
+            ios_tid == 58 and patch_usb_2_detect in entry
         ):  # Special case, IOS 58 has USB 2.0 "Patch" normally, but don't continue immediately because it may have other patches making it a cIOS
             results.update({ios_tid: (IOSType.ACTIVE, None)})
         if (
