@@ -58,8 +58,15 @@ sysmenu_ios_map = {
 
 
 def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
+    # one time checks
+    sysmenu_found = False
     results = dict()
     for entry in syscheck_lines:
+        if not sysmenu_found:
+            match = re_sysmenu.search(entry)
+            if match:
+                results.update({"SYSMENU":match.group(1)})
+                sysmenu_found = True
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
