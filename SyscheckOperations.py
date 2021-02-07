@@ -39,6 +39,7 @@ re_d2x_detect = re.compile(
 )  # Group 1 d2x version "v10" Group 2 beta or final Group 3 beta version
 re_lazy_full_info = re.compile(r"Info: (.*)\)")  # Group 1 the full "info" line from syscheck
 re_sysmenu = re.compile(r"System Menu (.\..)")
+re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})")
 sysmenu_ios_map = {
     "4.3": 80,
     "4.2": 70,
@@ -55,7 +56,6 @@ sysmenu_ios_map = {
     "2.0": 11,
     "1.0": 9,
 }
-re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})")
 
 
 def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
@@ -103,15 +103,14 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
     return (results, ReturnCodes.NORMAL)
 
 
-def cios_detect(syscheck_entry: str):
+def cios_detect(syscheck_entry: str) -> Tuple[IOSType, str]:
     if "d2x" in syscheck_entry:
         return (IOSType.CIOS_D2X, process_d2x(syscheck_entry))
     if cios_hermes_detect in syscheck_entry:
         return (IOSType.CIOS_HERMES, re_lazy_full_info.search(syscheck_entry).group(1))
     if cios_wanikoko_detect in syscheck_entry:
         return (IOSType.CIOS_WANIKOKO, re_lazy_full_info.search(syscheck_entry).group(1))
-    else:
-        return (IOSType.CIOS_UNKNOWN, "Generic cIOS")
+    return (IOSType.CIOS_UNKNOWN, "Generic cIOS")
 
 
 def process_d2x(syscheck_entry: str) -> dict:
@@ -128,7 +127,7 @@ def process_d2x(syscheck_entry: str) -> dict:
     }
 
 
-def gen_report_for_ios(ios: int, lut: dict):
+def gen_report_for_ios(ios: int, lut: dict) -> str:
     if ios not in lut:
         return f"IOS {ios} not found in sysCheck"
     entry = lut[ios]
