@@ -40,6 +40,8 @@ re_d2x_detect = re.compile(
 re_lazy_full_info = re.compile(r"Info: (.*)\)")  # Group 1 the full "info" line from syscheck
 re_sysmenu = re.compile(r"System Menu (.\..)")
 re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})")
+re_region = re.compile(r"Region: (\w*(\-.)?)")
+re_original_region = re.compile(r"\(original region: (.*)\)")
 sysmenu_ios_map = {
     "4.3": 80,
     "4.2": 70,
@@ -62,6 +64,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
     # one time checks
     sysmenu_found = False
     hbc_found = False
+    region_found = False
     results = dict()
     for entry in syscheck_lines:
         if not sysmenu_found:
@@ -76,6 +79,13 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
                 results.update({"HBC": (match.group(1), match.group(2))})
                 hbc_found = True
                 continue
+        if not region_found:
+            match = re_region.search(entry)
+            if match:
+                results.update({"CURR_REGION":match.group(1)})
+                changed_region = re_original_region.search(entry)
+                if changed_region:
+                    results.update({"ORIGINAL_REGION":changed_region.group(1)})
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
@@ -97,7 +107,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
             (patch_nand_access_detect in entry)
             or (patch_eticket_services_detect in entry)
             or (patch_trucha_patch_detect in entry)
-            or (patch_usb_2_detect in entry and ios_tid != 58)
+            or (ios_tid != 58 and patch_usb_2_detect in entry)
         ):
             results.update({ios_tid: cios_detect(entry)})
     return (results, ReturnCodes.NORMAL)
@@ -166,6 +176,10 @@ def interactive(infile: pathlib.Path) -> int:
         hbc_ios = "Unknown"
     print("---- Quick Report ----")
     print(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
+    if "CURR_REGION" in result:
+        print("Current Region: {}".format(result["CURR_REGION"]))
+    if "ORIGINAL_REGION" in result:
+        print("Original Region: {}".format(result["ORIGINAL_REGION"]))
     print(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
     if sysmenu_ios != "Unknown":
         print(gen_report_for_ios(sysmenu_ios, result))
