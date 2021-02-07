@@ -37,7 +37,9 @@ re_d2x_detect = re.compile(
 )  # Group 1 d2x version "v10" Group 2 beta or final Group 3 beta version
 re_lazy_full_info = re.compile(r"Info: (.*)\)")  # Group 1 the full "info" line from syscheck
 re_sysmenu = re.compile(r"System Menu (.\..)")
-re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})") # Group 1: HBC version Group 2: HBC IOS
+re_hbc = re.compile(
+    r"Homebrew Channel (.*) running on IOS(\d{1,3})"
+)  # Group 1: HBC version Group 2: HBC IOS
 re_region = re.compile(r"Region: (\w*(\-.)?)")
 re_original_region = re.compile(r"\(original region: (.*)\)")
 sysmenu_ios_map = {
@@ -65,11 +67,11 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
     region_found = False
     priiloader_found = False
     results = {
-        "SYSMENU":"Unknown",
-        "HBC":["Unknown", 0],
-        "Priiloader":False,
-        "CURR_REGION":"Unknown",
-        "ORIGINAL_REGION":True
+        "SYSMENU": "Unknown",
+        "HBC": ["Unknown", 0],
+        "Priiloader": False,
+        "CURR_REGION": "Unknown",
+        "ORIGINAL_REGION": True,
     }
     for entry in syscheck_lines:
         if not sysmenu_found:
@@ -87,21 +89,21 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
         if not region_found:
             match = re_region.search(entry)
             if match:
-                results.update({"CURR_REGION":match.group(1)})
+                results.update({"CURR_REGION": match.group(1)})
                 changed_region = re_original_region.search(entry)
                 if changed_region:
-                    results.update({"ORIGINAL_REGION":changed_region.group(1)})
+                    results.update({"ORIGINAL_REGION": changed_region.group(1)})
                 continue
         if not priiloader_found:
             if priiloader_detect in entry:
-                results.update({"Priiloader":True})
+                results.update({"Priiloader": True})
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
         else:
             continue
         if vwii_detect in entry:
-            return None # Not supported
+            return None  # Not supported
         if stub_detect in entry:
             results.update({ios_tid: (IOSType.STUB, None)})
             continue
@@ -120,7 +122,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
         ):
             results.update({ios_tid: cios_detect(entry)})
         if ios_tid == 254 and bootmii_ios_detect in entry:
-            results.update({ios_tid:(IOSType.BOOTMII_IOS, None)})
+            results.update({ios_tid: (IOSType.BOOTMII_IOS, None)})
     return results
 
 
@@ -185,7 +187,7 @@ def interactive(infile: pathlib.Path):
     if hbc[0] != "Unknown":
         hbc_ios = int(result["HBC"][1])
     else:
-        hbc = ("Unknown", 58) # Trust me ok
+        hbc = ("Unknown", 58)  # Trust me ok
     print("---- Quick Report ----")
     print(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
     if "CURR_REGION" in result:
@@ -201,7 +203,8 @@ def interactive(infile: pathlib.Path):
         print(gen_report_for_ios(sysmenu_ios, result))
     if hbc_ios != 58 and hbc_ios != "Unknown":
         print(gen_report_for_ios(hbc_ios, result))
-    [print(gen_report_for_ios(n, result)) for n in [58, 249,250,251,254]]
+    [print(gen_report_for_ios(n, result)) for n in [58, 249, 250, 251, 254]]
+
 
 if __name__ == "__main__":
     import argparse
