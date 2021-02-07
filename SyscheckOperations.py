@@ -55,11 +55,13 @@ sysmenu_ios_map = {
     "2.0": 11,
     "1.0": 9,
 }
+re_hbc = re.compile(r"Homebrew Channel (.*) running on IOS(\d{1,3})")
 
 
 def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
     # one time checks
     sysmenu_found = False
+    hbc_found = False
     results = dict()
     for entry in syscheck_lines:
         if not sysmenu_found:
@@ -67,6 +69,13 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> Tuple[dict, int]:
             if match:
                 results.update({"SYSMENU": match.group(1)})
                 sysmenu_found = True
+                continue
+        if not hbc_found:
+            match = re_hbc.search(entry)
+            if match:
+                results.update({"HBC": (match.group(1), match.group(2))})
+                hbc_found = True
+                continue
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
@@ -119,11 +128,51 @@ def process_d2x(syscheck_entry: str) -> dict:
     }
 
 
-def interactive(infile: pathlib.Path) -> int:
-    from pprint import pprint
+def gen_report_for_ios(ios: int, lut: dict):
+    if ios not in lut:
+        return f"IOS {ios} not found in sysCheck"
+    entry = lut[ios]
+    if entry[0] == IOSType.ACTIVE:
+        return f"IOS {ios} : Active Unmodified IOS"
+    if entry[0] == IOSType.STUB:
+        return f"IOS {ios} : Stubbed IOS"
+    if (
+        entry[0] == IOSType.CIOS_UNKNOWN
+        or entry[0] == IOSType.CIOS_HERMES
+        or entry[0] == IOSType.CIOS_WANIKOKO
+    ):
+        return f"IOS {ios} : cIOS {entry[1]}"
+    if entry[0] == IOSType.CIOS_D2X:
+        d2x_base = entry[1]["base"]
+        d2x_ver = entry[1]["d2x_ver"]
+        d2x_release = entry[1]["d2x_release"]
+        d2x_beta_ver = entry[1]["d2x_beta_ver"]
+        return f"IOS {ios} : d2x cIOS Base: {d2x_base} Version: {d2x_ver} Release: {d2x_release}{d2x_beta_ver}"
 
+
+def interactive(infile: pathlib.Path) -> int:
     result, ret = process_syscheck((line for line in open(infile)))
-    pprint(result)
+    try:
+        sysmenu = result["SYSMENU"]
+        sysmenu_ios = sysmenu_ios_map[sysmenu]
+    except KeyError:
+        sysmenu = "?"
+        sysmenu_ios = None
+    try:
+        hbc = result["HBC"][0]
+        hbc_ios = int(result["HBC"][1])
+    except KeyError:
+        hbc = "?"
+        hbc_ios = None
+    print("---- Quick Report ----")
+    print(f"System Menu version {sysmenu}")
+    print(f"Homebrew Channel version {hbc}")
+    if sysmenu_ios:
+        print(gen_report_for_ios(sysmenu_ios, result))
+    if hbc_ios != 58:
+        print(gen_report_for_ios(hbc_ios, result))
+    print(gen_report_for_ios(58, result))
+    [print(gen_report_for_ios(n, result)) for n in range(249, 252)]
     return ret
 
 
