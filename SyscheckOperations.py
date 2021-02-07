@@ -194,6 +194,8 @@ def interactive(infile: pathlib.Path):
     print(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
     if result["Priiloader"]:
         print("Priiloader is installed")
+    else:
+        print("Priiloader not installed")
     if sysmenu_ios != "Unknown":
         print(gen_report_for_ios(sysmenu_ios, result))
     if hbc_ios != 58 and hbc_ios != "Unknown":
