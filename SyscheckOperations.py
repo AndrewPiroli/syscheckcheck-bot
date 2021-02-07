@@ -24,6 +24,7 @@ patch_eticket_services_detect = "ES Identify"
 patch_no_patches_detect = "No Patches"
 cios_hermes_detect = "hermes"
 cios_wanikoko_detect = "wanikoko"
+priiloader_detect = "Priiloader installed"
 # big boy time
 re_ios_tid = re.compile(r"IOS(\d{1,3})")
 re_cios_title_base_detect = re.compile(
@@ -60,7 +61,14 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
     sysmenu_found = False
     hbc_found = False
     region_found = False
-    results = dict()
+    priiloader_found = False
+    results = {
+        "SYSMENU":"Unknown",
+        "HBC":["Unknown", 0],
+        "Priiloader":False,
+        "CURR_REGION":"Unknown",
+        "ORIGINAL_REGION":True
+    }
     for entry in syscheck_lines:
         if not sysmenu_found:
             match = re_sysmenu.search(entry)
@@ -82,6 +90,9 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
                 if changed_region:
                     results.update({"ORIGINAL_REGION":changed_region.group(1)})
                 continue
+        if not priiloader_found:
+            if priiloader_detect in entry:
+                results.update({"Priiloader":True})
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
@@ -158,18 +169,16 @@ def gen_report_for_ios(ios: int, lut: dict) -> str:
 
 def interactive(infile: pathlib.Path):
     result = process_syscheck((line for line in open(infile)))
-    try:
-        sysmenu = result["SYSMENU"]
+    sysmenu = result["SYSMENU"]
+    if sysmenu != "Unknown":
         sysmenu_ios = sysmenu_ios_map[sysmenu]
-    except KeyError:
-        sysmenu = "?"
-        sysmenu_ios = "Unknown"
-    try:
-        hbc = result["HBC"][0]
+    else:
+        sysmenu_ios = "???"
+    hbc = result["HBC"][0]
+    if hbc[0] != "Unknown":
         hbc_ios = int(result["HBC"][1])
-    except KeyError:
-        hbc = "?"
-        hbc_ios = "Unknown"
+    else:
+        hbc = ("Unknown", 58) # Trust me ok
     print("---- Quick Report ----")
     print(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
     if "CURR_REGION" in result:
@@ -177,6 +186,8 @@ def interactive(infile: pathlib.Path):
     if "ORIGINAL_REGION" in result:
         print("Original Region: {}".format(result["ORIGINAL_REGION"]))
     print(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
+    if result["Priiloader"]:
+        print("Priiloader is installed")
     if sysmenu_ios != "Unknown":
         print(gen_report_for_ios(sysmenu_ios, result))
     if hbc_ios != 58 and hbc_ios != "Unknown":
