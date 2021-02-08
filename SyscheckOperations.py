@@ -225,8 +225,8 @@ def summaraize(infile: pathlib.Path):
             if ios_typ == IOSType.BOOTMII_IOS:
                 ios_active += 1
     report.append(f"Total IOS count: {ios_total}")
-    report.append(f"Stubs: {ios_stub} of total: {round((ios_stub/ios_total)*100,2)}%")
-    report.append(f"Active: {ios_active} total. {round((ios_active/ios_total)*100,2)}%of total")
+    report.append(f"Stubs: {ios_stub}total. {round((ios_stub/ios_total)*100,2)}% of total")
+    report.append(f"Active: {ios_active} total. {round((ios_active/ios_total)*100,2)}% of total")
     report.append(f"cIOS: {ios_cios} total. {round((ios_cios/(ios_total - ios_stub)*100),2)}% of non-stub")
     return "\n".join(report)
 
