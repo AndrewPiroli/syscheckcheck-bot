@@ -14,7 +14,7 @@ It only speaks English, and may fail to reply on weirdly formatted data. \n\
 The bot will never reply to abusers"
 
 
-class MessageStatus(Enum):
+class MessageStatus(Enum): # Unused, maybe in the future, maybe not
     OK = auto()
     UNKNOWN = auto()
     NO_ATTACHMENT = auto()
@@ -23,6 +23,7 @@ class MessageStatus(Enum):
 
 
 client = discord.Client()
+tasks_cleaning = False # Do I even need to do this?
 async_tasks = []
 active_files = []
 
@@ -48,30 +49,35 @@ async def handle_syscheck(msg: discord.Message):
 
 
 async def clean_tasks(tasklist: List[asyncio.Task]):
-    to_pop = []
-    for idx, task in enumerate(tasklist):
-        if task.done():
-            try:
-                await task
-            except:
-                task.cancel()
-                print("err awaiting")
-                await task
-            to_pop.append(idx)
-    for idx in to_pop:
-        print(f"Clean {idx}")
-        tasklist.pop(idx)
+    global tasks_cleaning # SHUT UP PYLINT - YOU SUCK
+    while True:
+        await asyncio.sleep(60)
+        try:
+            to_pop = []
+            tasks_cleaning = True
+            for idx, task in enumerate(tasklist):
+                if task.done():
+                    try:
+                        await task
+                    except:
+                        task.cancel()
+                    to_pop.append(idx)
+            for idx in sorted(to_pop, reverse=True):
+                print(f"Clean {idx}")
+                tasklist.pop(idx)
+        finally:
+            tasks_cleaning = False
 
 
 @client.event
 async def on_ready():
-    print(f"We have logged in as {client.user}")
+    print(f"Bot ready {client.user}")
+    asyncio.create_task(clean_tasks(async_tasks))
 
 
 @client.event
 async def on_message(message):
     msg_dead = False
-    janitor = asyncio.create_task(clean_tasks(async_tasks))
     if not msg_dead and message.author == client.user:
         msg_dead = True
     if not msg_dead and message.attachments:
@@ -85,8 +91,9 @@ async def on_message(message):
         print("too big")
         msg_dead = True
     if not msg_dead and "syscheck" in attachment.filename.lower():
+        while not (lambda:tasks_cleaning):
+            await asyncio.sleep(0.1)
         async_tasks.append(asyncio.create_task(handle_syscheck(message)))
-    await janitor
 
 
 client.run(open("private-discord-token.txt", "r").read().strip())
