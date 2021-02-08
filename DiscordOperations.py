@@ -14,7 +14,7 @@ It only speaks English, and may fail to reply on weirdly formatted data. \n\
 The bot will never reply to abusers"
 
 
-class MessageStatus(Enum): # Unused, maybe in the future, maybe not
+class MessageStatus(Enum):  # Unused, maybe in the future, maybe not
     OK = auto()
     UNKNOWN = auto()
     NO_ATTACHMENT = auto()
@@ -23,7 +23,7 @@ class MessageStatus(Enum): # Unused, maybe in the future, maybe not
 
 
 client = discord.Client()
-tasks_cleaning = False # Do I even need to do this?
+tasks_cleaning = False  # Do I even need to do this?
 async_tasks = []
 active_files = []
 
@@ -49,7 +49,7 @@ async def handle_syscheck(msg: discord.Message):
 
 
 async def clean_tasks(tasklist: List[asyncio.Task]):
-    global tasks_cleaning # SHUT UP PYLINT - YOU SUCK
+    global tasks_cleaning  # SHUT UP PYLINT - YOU SUCK
     while True:
         await asyncio.sleep(60)
         try:
@@ -90,7 +90,7 @@ async def on_message(message):
         print("too big")
         return
     if "syscheck" in attachment.filename.lower():
-        while not (lambda:tasks_cleaning):
+        while not (lambda: tasks_cleaning):
             await asyncio.sleep(0.1)
         async_tasks.append(asyncio.create_task(handle_syscheck(message)))
 
