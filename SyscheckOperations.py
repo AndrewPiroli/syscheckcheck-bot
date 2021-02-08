@@ -189,7 +189,6 @@ def summaraize(infile: pathlib.Path):
         hbc_ios = int(result["HBC"][1])
     else:
         hbc = ("Unknown", 58)  # Trust me ok
-    report.append("---- Quick Report ----")
     report.append(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
     if "CURR_REGION" in result:
         report.append("Current Region: {}".format(result["CURR_REGION"]))

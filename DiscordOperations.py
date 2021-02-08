@@ -41,7 +41,10 @@ async def handle_syscheck(msg: discord.Message):
     attachment = msg.attachments[0]
     filename = await create_file(attachment)
     report = SyscheckOperations.summaraize(filename)
-    await msg.reply(f"```{report}\n\n{disclaimer}```")
+    reply_msg = discord.Embed(title="Syscheck Summary")
+    reply_msg.add_field(name="Report", value=report, inline=False)
+    reply_msg.add_field(name="Disclaimer", value=disclaimer, inline=False)
+    await msg.reply(embed=reply_msg)
 
 
 async def clean_tasks(tasklist: List[asyncio.Task]):
@@ -52,6 +55,8 @@ async def clean_tasks(tasklist: List[asyncio.Task]):
                 await task
             except:
                 task.cancel()
+                print("err awaiting")
+                await task
             to_pop.append(idx)
     for idx in to_pop:
         print(f"Clean {idx}")
