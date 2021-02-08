@@ -65,21 +65,21 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    msg_dead = False
     janitor = asyncio.create_task(clean_tasks(async_tasks))
-    if message.author == client.user:
-        return
-    if message.attachments:
+    if not msg_dead and message.author == client.user:
+        msg_dead = True
+    if not msg_dead and message.attachments:
         attachment: discord.Attachment = message.attachments[0]
     else:
-        await janitor
-        return
-    if attachment.width:
+        msg_dead = True
+    if not msg_dead and attachment.width:
         print("no image")
-        return
-    if attachment.size > max_attach_size:
+        msg_dead = True
+    if not msg_dead and attachment.size > max_attach_size:
         print("too big")
-        return
-    if "syscheck" in attachment.filename.lower():
+        msg_dead = True
+    if not msg_dead and "syscheck" in attachment.filename.lower():
         async_tasks.append(asyncio.create_task(handle_syscheck(message)))
     await janitor
 
