@@ -175,7 +175,8 @@ def gen_report_for_ios(ios: int, lut: dict) -> str:
     return f"Error generating report for IOS {ios}"
 
 
-def interactive(infile: pathlib.Path):
+def summaraize(infile: pathlib.Path):
+    report = []
     result = process_syscheck((line for line in open(infile)))
     # These next few lines are cancer, I know, I know
     sysmenu = result["SYSMENU"]
@@ -188,22 +189,23 @@ def interactive(infile: pathlib.Path):
         hbc_ios = int(result["HBC"][1])
     else:
         hbc = ("Unknown", 58)  # Trust me ok
-    print("---- Quick Report ----")
-    print(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
+    report.append("---- Quick Report ----")
+    report.append(f"System Menu version {sysmenu} using IOS {sysmenu_ios}")
     if "CURR_REGION" in result:
-        print("Current Region: {}".format(result["CURR_REGION"]))
+        report.append("Current Region: {}".format(result["CURR_REGION"]))
     if "ORIGINAL_REGION" in result:
-        print("Original Region: {}".format(result["ORIGINAL_REGION"]))
-    print(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
+        report.append("Original Region: {}".format(result["ORIGINAL_REGION"]))
+    report.append(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
     if result["Priiloader"]:
-        print("Priiloader is installed")
+        report.append("Priiloader is installed")
     else:
-        print("Priiloader not installed")
+        report.append("Priiloader not installed")
     if sysmenu_ios != "Unknown":
-        print(gen_report_for_ios(sysmenu_ios, result))
+        report.append(gen_report_for_ios(sysmenu_ios, result))
     if hbc_ios != 58 and hbc_ios != "Unknown":
-        print(gen_report_for_ios(hbc_ios, result))
-    [print(gen_report_for_ios(n, result)) for n in [58, 249, 250, 251, 254]]
+        report.append(gen_report_for_ios(hbc_ios, result))
+    [report.append(gen_report_for_ios(n, result)) for n in [58, 249, 250, 251, 254]]
+    return "\n".join(report)
 
 
 if __name__ == "__main__":
@@ -212,4 +214,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("syscheck_file", help="syscheck.csv to process")
     infile = pathlib.Path(parser.parse_args().syscheck_file).absolute()
-    interactive(infile)
+    print(summaraize(infile))

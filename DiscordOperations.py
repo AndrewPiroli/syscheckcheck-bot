@@ -5,6 +5,7 @@ from pathlib import Path
 import uuid
 import asyncio
 from typing import List
+import SyscheckOperations
 max_attach_size = 10240 # 10 KB
 storage = Path("temp").absolute()
 
@@ -20,12 +21,19 @@ client = discord.Client()
 async_tasks = []
 active_files = []
 
-async def create_file(attachment: discord.Attachment):
-    filename = f"{uuid.uuid4()}.txt" # This *probably* won't collide ¯\_(ツ)_/¯ I'll write a check later
+async def create_file(attachment: discord.Attachment) -> Path:
+    filename = storage / f"{uuid.uuid4()}.txt" # This *probably* won't collide ¯\_(ツ)_/¯ I'll write a check later
     with open(storage / filename, "wb") as syscheck_file:
         await attachment.save(syscheck_file)
         active_files.append(filename)
-    
+    return filename.absolute()
+
+async def handle_syscheck(msg: discord.Message):
+    attachment = msg.attachments[0]
+    filename = await create_file(attachment)
+    report = SyscheckOperations.summaraize(filename)
+    await msg.reply(f"```{report}```")
+
 async def clean_tasks(tasklist: List[asyncio.Task]):
     to_pop = []
     for idx,task in enumerate(tasklist):
@@ -33,6 +41,7 @@ async def clean_tasks(tasklist: List[asyncio.Task]):
             await task
             to_pop.append(idx)
     for idx in to_pop:
+        print(f"Clean {idx}")
         tasklist.pop(idx)
 
 @client.event
@@ -45,9 +54,9 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.attachments:
-        print("yeet")
         attachment: discord.Attachment = message.attachments[0]
     else:
+        await janitor
         return
     if attachment.width:
         print('no image')
@@ -55,8 +64,8 @@ async def on_message(message):
     if attachment.size > max_attach_size:
         print('too big')
         return
-    if "syscheck" in attachment.filename:
-        async_tasks.append(asyncio.create_task(create_file(attachment)))
+    if "syscheck" in attachment.filename.lower():
+        async_tasks.append(asyncio.create_task(handle_syscheck(message)))
     await janitor
 
 
