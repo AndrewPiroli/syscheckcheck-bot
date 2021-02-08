@@ -11,6 +11,7 @@ storage = Path("temp").absolute()
 disclaimer = "This bot is currently in alpha and under active development. \n\
 It only speaks English, and may fail to reply on weirdly formatted data. \n\
 The bot will never reply to abusers"
+
 class MessageStatus(Enum):
     OK = auto()
     UNKNOWN = auto()

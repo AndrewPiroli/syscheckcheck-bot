@@ -205,6 +205,29 @@ def summaraize(infile: pathlib.Path):
     if hbc_ios != 58 and hbc_ios != "Unknown":
         report.append(gen_report_for_ios(hbc_ios, result))
     [report.append(gen_report_for_ios(n, result)) for n in [58, 249, 250, 251, 254]]
+    ios_total = 0
+    ios_active = 0
+    ios_cios = 0
+    ios_stub = 0
+    for k,v in result.items():
+        if isinstance(k, int):
+            ios_typ: IOSType = v[0]
+            ios_total += 1
+            if ios_typ == IOSType.ACTIVE:
+                ios_active += 1
+                continue
+            if ios_typ == IOSType.STUB:
+                ios_stub += 1
+                continue
+            if ios_typ == IOSType.CIOS_D2X or ios_typ == IOSType.CIOS_HERMES or ios_typ == IOSType.CIOS_WANIKOKO or ios_typ == IOSType.CIOS_UNKNOWN:
+                ios_cios += 1
+                continue
+            if ios_typ == IOSType.BOOTMII_IOS:
+                ios_active += 1
+    report.append(f"Total IOS count: {ios_total}")
+    report.append(f"Stubs: {ios_stub} of total: {round((ios_stub/ios_total)*100,2)}%")
+    report.append(f"Active: {ios_active} total. {round((ios_active/ios_total)*100,2)}%of total")
+    report.append(f"cIOS: {ios_cios} total. {round((ios_cios/(ios_total - ios_stub)*100),2)}% of non-stub")
     return "\n".join(report)
 
 
