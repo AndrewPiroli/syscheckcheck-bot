@@ -41,7 +41,10 @@ async def clean_tasks(tasklist: List[asyncio.Task]):
     to_pop = []
     for idx,task in enumerate(tasklist):
         if task.done():
-            await task
+            try:
+                await task
+            except:
+                task.cancel()
             to_pop.append(idx)
     for idx in to_pop:
         print(f"Clean {idx}")
