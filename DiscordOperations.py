@@ -8,7 +8,9 @@ from typing import List
 import SyscheckOperations
 max_attach_size = 10240 # 10 KB
 storage = Path("temp").absolute()
-
+disclaimer = "This bot is currently in alpha and under active development. \n\
+It only speaks English, and may fail to reply on weirdly formatted data. \n\
+The bot will never reply to abusers"
 class MessageStatus(Enum):
     OK = auto()
     UNKNOWN = auto()
@@ -32,7 +34,7 @@ async def handle_syscheck(msg: discord.Message):
     attachment = msg.attachments[0]
     filename = await create_file(attachment)
     report = SyscheckOperations.summaraize(filename)
-    await msg.reply(f"```{report}```")
+    await msg.reply(f"```{report}\n\n{disclaimer}```")
 
 async def clean_tasks(tasklist: List[asyncio.Task]):
     to_pop = []
