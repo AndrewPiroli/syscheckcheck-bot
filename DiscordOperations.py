@@ -1,6 +1,5 @@
 import discord
 from enum import Enum, auto
-from pprint import pprint
 from pathlib import Path
 import uuid
 import asyncio
