@@ -6,11 +6,13 @@ import uuid
 import asyncio
 from typing import List
 import SyscheckOperations
-max_attach_size = 10240 # 10 KB
+
+max_attach_size = 10240  # 10 KB
 storage = Path("temp").absolute()
 disclaimer = "This bot is currently in alpha and under active development. \n\
 It only speaks English, and may fail to reply on weirdly formatted data. \n\
 The bot will never reply to abusers"
+
 
 class MessageStatus(Enum):
     OK = auto()
@@ -24,12 +26,16 @@ client = discord.Client()
 async_tasks = []
 active_files = []
 
+
 async def create_file(attachment: discord.Attachment) -> Path:
-    filename = storage / f"{uuid.uuid4()}.txt" # This *probably* won't collide ¯\_(ツ)_/¯ I'll write a check later
+    filename = (
+        storage / f"{uuid.uuid4()}.txt"
+    )  # This *probably* won't collide ¯\_(ツ)_/¯ I'll write a check later
     with open(storage / filename, "wb") as syscheck_file:
         await attachment.save(syscheck_file)
         active_files.append(filename)
     return filename.absolute()
+
 
 async def handle_syscheck(msg: discord.Message):
     attachment = msg.attachments[0]
@@ -37,9 +43,10 @@ async def handle_syscheck(msg: discord.Message):
     report = SyscheckOperations.summaraize(filename)
     await msg.reply(f"```{report}\n\n{disclaimer}```")
 
+
 async def clean_tasks(tasklist: List[asyncio.Task]):
     to_pop = []
-    for idx,task in enumerate(tasklist):
+    for idx, task in enumerate(tasklist):
         if task.done():
             try:
                 await task
@@ -50,9 +57,11 @@ async def clean_tasks(tasklist: List[asyncio.Task]):
         print(f"Clean {idx}")
         tasklist.pop(idx)
 
+
 @client.event
 async def on_ready():
     print(f"We have logged in as {client.user}")
+
 
 @client.event
 async def on_message(message):
@@ -65,10 +74,10 @@ async def on_message(message):
         await janitor
         return
     if attachment.width:
-        print('no image')
+        print("no image")
         return
     if attachment.size > max_attach_size:
-        print('too big')
+        print("too big")
         return
     if "syscheck" in attachment.filename.lower():
         async_tasks.append(asyncio.create_task(handle_syscheck(message)))
