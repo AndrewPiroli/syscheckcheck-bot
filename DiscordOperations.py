@@ -90,7 +90,7 @@ async def on_message(message):
         print("too big")
         return
     if "syscheck" in attachment.filename.lower():
-        while not (lambda: tasks_cleaning):
+        while (lambda: tasks_cleaning)():
             await asyncio.sleep(0.1)
         async_tasks.append(asyncio.create_task(handle_syscheck(message)))
 
