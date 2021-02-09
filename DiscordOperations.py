@@ -14,8 +14,6 @@ It only speaks English, and may fail to reply on weirdly formatted data. \n\
 The bot will never reply to abusers"
 
 
-
-
 class DiscordSyscheck(discord.Client):
     tasks_cleaning = False
     async_tasks = []
@@ -31,7 +29,6 @@ class DiscordSyscheck(discord.Client):
             self.active_files.append(filename)
         return filename.absolute()
 
-
     async def handle_syscheck(self, msg: discord.Message):
         attachment = msg.attachments[0]
         filename = await self.create_file(attachment)
@@ -40,7 +37,6 @@ class DiscordSyscheck(discord.Client):
         reply_msg.add_field(name="Report", value=report, inline=False)
         reply_msg.add_field(name="Disclaimer", value=disclaimer, inline=False)
         await msg.channel.send(embed=reply_msg)
-
 
     async def clean_tasks(self):
         while True:
@@ -61,7 +57,9 @@ class DiscordSyscheck(discord.Client):
             finally:
                 self.tasks_cleaning = False
             for syscheck_file in os.listdir(storage):
-                if ("syscheck.txt" in syscheck_file) and (Path(storage / syscheck_file) not in self.active_files):
+                if ("syscheck.txt" in syscheck_file) and (
+                    Path(storage / syscheck_file) not in self.active_files
+                ):
                     print(f"Unlinking old {syscheck_file}")
                     os.unlink(storage / syscheck_file)
 
@@ -86,6 +84,7 @@ class DiscordSyscheck(discord.Client):
             while self.tasks_cleaning:
                 await asyncio.sleep(0.1)
             self.async_tasks.append(asyncio.create_task(self.handle_syscheck(message)))
+
 
 client = DiscordSyscheck()
 client.run(open("private-discord-token.txt", "r").read().strip())

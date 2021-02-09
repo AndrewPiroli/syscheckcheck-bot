@@ -28,9 +28,7 @@ priiloader_detect = "Priiloader installed"
 bootmii_ios_detect = "BootMii"
 # big boy time
 re_ios_tid = re.compile(r"IOS(.{1,3})")
-re_cios_title_base_detect = re.compile(
-    r"IOS(\d{1,3})\[(.*?)\]"
-)  # Group 1 = tid Group 2 = Base IOS
+re_cios_title_base_detect = re.compile(r"IOS(\d{1,3})\[(.*?)\]")  # Group 1 = tid Group 2 = Base IOS
 re_d2x_detect = re.compile(
     r"d2x-(v\d{1,2})(beta|final)?(\d{0,2}(-alt)?)"
 )  # Group 1 d2x version "v10" Group 2 beta or final Group 3 beta version
@@ -59,7 +57,8 @@ sysmenu_ios_map = {
     "1.0": 9,
 }
 
-def process_line_syscheck(entry:str) -> dict:
+
+def process_line_syscheck(entry: str) -> dict:
     results = dict()
     match = re_sysmenu.search(entry)
     if match:
@@ -111,6 +110,7 @@ def process_line_syscheck(entry:str) -> dict:
     if ios_tid == 254 and bootmii_ios_detect in entry:
         results.update({ios_tid: (IOSType.BOOTMII_IOS, None)})
     return results
+
 
 def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
     # one time checks
