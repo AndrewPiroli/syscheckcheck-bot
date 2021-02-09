@@ -202,7 +202,7 @@ def summaraize(infile: pathlib.Path):
         report.append("Original Region: {}".format(result["ORIGINAL_REGION"]))
     report.append(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
     if result["DRIVEDATE"]:
-        report.append("Drive date: {}".format())
+        report.append("Drive date: {}".format(result["DRIVEDATE"]))
     if result["Priiloader"]:
         report.append("Priiloader is installed")
     else:
