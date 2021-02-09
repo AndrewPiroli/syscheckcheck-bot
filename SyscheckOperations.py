@@ -186,7 +186,7 @@ def summaraize(infile: pathlib.Path):
     result = process_syscheck((line for line in open(infile)))
     # These next few lines are cancer, I know, I know
     sysmenu = result["SYSMENU"]
-    if sysmenu != "Unknown":
+    if sysmenu in sysmenu_ios_map:
         sysmenu_ios = sysmenu_ios_map[sysmenu]
     else:
         sysmenu_ios = "???"
