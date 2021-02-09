@@ -44,7 +44,7 @@ async def handle_syscheck(msg: discord.Message):
     reply_msg = discord.Embed(title="Syscheck Summary")
     reply_msg.add_field(name="Report", value=report, inline=False)
     reply_msg.add_field(name="Disclaimer", value=disclaimer, inline=False)
-    await msg.reply(embed=reply_msg)
+    await msg.channel.send(embed=reply_msg)
 
 
 async def clean_tasks(tasklist: List[asyncio.Task]):
