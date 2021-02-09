@@ -28,9 +28,9 @@ cios_wanikoko_detect = "wanikoko"
 priiloader_detect = "Priiloader installed"
 bootmii_ios_detect = "BootMii"
 # big boy time
-re_ios_tid = re.compile(r"IOS(\d{1,3})")
+re_ios_tid = re.compile(r"IOS(.{1,3})")
 re_cios_title_base_detect = re.compile(
-    r"IOS(\d{1,3})\[(\d{1,3})\]"
+    r"IOS(\d{1,3})\[(.*?)\]"
 )  # Group 1 = tid Group 2 = Base IOS
 re_d2x_detect = re.compile(
     r"d2x-(v\d{1,2})(beta|final)?(\d{0,2}(-alt)?)"
@@ -105,7 +105,10 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
                 results.update({"DRIVEDATE": match.group(1)})
         match = re_ios_tid.search(entry)
         if match:
-            ios_tid = int(match.group(1))
+            try:
+                ios_tid = int(match.group(1))
+            except ValueError:
+                continue
         else:
             continue
         if vwii_detect in entry:
