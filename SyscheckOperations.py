@@ -177,7 +177,7 @@ def gen_report_for_ios(ios: int, lut: dict) -> str:
         d2x_beta_ver = entry[1]["d2x_beta_ver"]
         return f"IOS {ios} : d2x cIOS Base: {d2x_base} Version: {d2x_ver} Release: {d2x_release}{d2x_beta_ver}"
     if entry[0] == IOSType.BOOTMII_IOS:
-        return f"BootMii IOS Installed at tid:{ios}"
+        return f"BootMii IOS Installed in IOS {ios}"
     return f"Error generating report for IOS {ios}"
 
 
