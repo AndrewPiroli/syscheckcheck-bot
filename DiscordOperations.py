@@ -5,6 +5,7 @@ import uuid
 import asyncio
 from typing import List
 import SyscheckOperations
+import os
 
 max_attach_size = 10240  # 10 KB
 storage = Path("temp").absolute()
@@ -29,10 +30,11 @@ active_files = []
 
 async def create_file(attachment: discord.Attachment) -> Path:
     filename = (
-        storage / f"{uuid.uuid4()}.txt"
+        storage / f"{uuid.uuid4()}.syscheck.txt"
     )  # This *probably* won't collide ¯\_(ツ)_/¯ I'll write a check later
-    with open(storage / filename, "wb") as syscheck_file:
+    with open(filename, "wb") as syscheck_file:
         await attachment.save(syscheck_file)
+        print(filename)
         active_files.append(filename)
     return filename.absolute()
 
@@ -66,6 +68,11 @@ async def clean_tasks(tasklist: List[asyncio.Task]):
                 tasklist.pop(idx)
         finally:
             tasks_cleaning = False
+        for syscheck_file in os.listdir(storage):
+            if ("syscheck.txt" in syscheck_file) and (Path(storage / syscheck_file) not in active_files):
+                print(f"Unlinking old {syscheck_file}")
+                os.unlink(storage / syscheck_file)
+
 
 
 @client.event
