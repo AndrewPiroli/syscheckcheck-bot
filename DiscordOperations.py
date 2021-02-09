@@ -15,7 +15,7 @@ The bot will never reply to abusers"
 
 
 class DiscordSyscheck(discord.Client):
-    tasks_cleaning = False
+    cleaning_lock = asyncio.Lock()
     async_tasks = []
     active_files = []
 
@@ -40,10 +40,9 @@ class DiscordSyscheck(discord.Client):
 
     async def clean_tasks(self):
         while True:
-            await asyncio.sleep(60)
-            try:
+            await asyncio.sleep(15)
+            async with self.cleaning_lock:
                 to_pop = []
-                self.tasks_cleaning = True
                 for idx, task in enumerate(self.async_tasks):
                     if task.done():
                         try:
@@ -54,8 +53,6 @@ class DiscordSyscheck(discord.Client):
                 for idx in sorted(to_pop, reverse=True):
                     print(f"Clean {idx}")
                     self.async_tasks.pop(idx)
-            finally:
-                self.tasks_cleaning = False
             for syscheck_file in os.listdir(storage):
                 if ("syscheck.txt" in syscheck_file) and (
                     Path(storage / syscheck_file) not in self.active_files
@@ -81,9 +78,8 @@ class DiscordSyscheck(discord.Client):
             print("too big")
             return
         if "syscheck" in attachment.filename.lower():
-            while self.tasks_cleaning:
-                await asyncio.sleep(0.1)
-            self.async_tasks.append(asyncio.create_task(self.handle_syscheck(message)))
+            async with self.cleaning_lock:
+                self.async_tasks.append(asyncio.create_task(self.handle_syscheck(message)))
 
 
 client = DiscordSyscheck()
