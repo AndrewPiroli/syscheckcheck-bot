@@ -42,6 +42,7 @@ re_hbc = re.compile(
 )  # Group 1: HBC version Group 2: HBC IOS
 re_region = re.compile(r"Region: (\w*(\-.)?)")
 re_original_region = re.compile(r"\(original region: (.*)\)")
+re_drive_date_detect = re.compile(r"Drive date: (.*)$")  # Group 1
 sysmenu_ios_map = {
     "4.3": 80,
     "4.2": 70,
@@ -66,6 +67,7 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
     hbc_found = False
     region_found = False
     priiloader_found = False
+    drive_date_found = False
     results = {
         "SYSMENU": "Unknown",
         "HBC": ["Unknown", 0],
@@ -97,6 +99,10 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
         if not priiloader_found:
             if priiloader_detect in entry:
                 results.update({"Priiloader": True})
+        if not drive_date_found:
+            match = re_drive_date_detect.search(entry)
+            if match:
+                results.update({"DRIVEDATE": match.group(1)})
         match = re_ios_tid.search(entry)
         if match:
             ios_tid = int(match.group(1))
@@ -195,6 +201,8 @@ def summaraize(infile: pathlib.Path):
     if "ORIGINAL_REGION" in result:
         report.append("Original Region: {}".format(result["ORIGINAL_REGION"]))
     report.append(f"Homebrew Channel version {hbc} using IOS {hbc_ios}")
+    if result["DRIVEDATE"]:
+        report.append("Drive date: {}".format())
     if result["Priiloader"]:
         report.append("Priiloader is installed")
     else:
