@@ -16,7 +16,6 @@ class IOSType(Enum):
 
 
 # These are simple substring matches, no reason to bother with regex
-vwii_detect = "vIOS"
 stub_detect = "Stub"
 patch_usb_2_detect = "USB 2.0"
 patch_nand_access_detect = "NAND Access"
@@ -60,14 +59,61 @@ sysmenu_ios_map = {
     "1.0": 9,
 }
 
+def process_line_syscheck(entry:str) -> dict:
+    results = dict()
+    match = re_sysmenu.search(entry)
+    if match:
+        results.update({"SYSMENU": match.group(1)})
+        return results
+    match = re_hbc.search(entry)
+    if match:
+        results.update({"HBC": (match.group(1), match.group(2))})
+        return results
+    match = re_region.search(entry)
+    if match:
+        results.update({"CURR_REGION": match.group(1)})
+        changed_region = re_original_region.search(entry)
+        if changed_region:
+            results.update({"ORIGINAL_REGION": changed_region.group(1)})
+        return results
+    if priiloader_detect in entry:
+        results.update({"Priiloader": True})
+        return results
+    match = re_drive_date_detect.search(entry)
+    if match:
+        results.update({"DRIVEDATE": match.group(1)})
+        return results
+    match = re_ios_tid.search(entry)
+    if match:
+        try:
+            ios_tid = int(match.group(1))
+        except ValueError:
+            return results
+    else:
+        return results
+    if stub_detect in entry:
+        results.update({ios_tid: (IOSType.STUB, None)})
+        return results
+    if patch_no_patches_detect in entry:
+        results.update({ios_tid: (IOSType.ACTIVE, None)})
+        return results
+    if (
+        ios_tid == 58 and patch_usb_2_detect in entry
+    ):  # Special case, IOS 58 has USB 2.0 "Patch" normally, but don't continue immediately because it may have other patches making it a cIOS
+        results.update({ios_tid: (IOSType.ACTIVE, None)})
+    if (
+        (patch_nand_access_detect in entry)
+        or (patch_eticket_services_detect in entry)
+        or (patch_trucha_patch_detect in entry)
+        or (ios_tid != 58 and patch_usb_2_detect in entry)
+    ):
+        results.update({ios_tid: cios_detect(entry)})
+    if ios_tid == 254 and bootmii_ios_detect in entry:
+        results.update({ios_tid: (IOSType.BOOTMII_IOS, None)})
+    return results
 
 def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
     # one time checks
-    sysmenu_found = False
-    hbc_found = False
-    region_found = False
-    priiloader_found = False
-    drive_date_found = False
     results = {
         "SYSMENU": "Unknown",
         "HBC": ["Unknown", 0],
@@ -76,62 +122,10 @@ def process_syscheck(syscheck_lines: Iterator[str]) -> dict:
         "ORIGINAL_REGION": True,
     }
     for entry in syscheck_lines:
-        if not sysmenu_found:
-            match = re_sysmenu.search(entry)
-            if match:
-                results.update({"SYSMENU": match.group(1)})
-                sysmenu_found = True
-                continue
-        if not hbc_found:
-            match = re_hbc.search(entry)
-            if match:
-                results.update({"HBC": (match.group(1), match.group(2))})
-                hbc_found = True
-                continue
-        if not region_found:
-            match = re_region.search(entry)
-            if match:
-                results.update({"CURR_REGION": match.group(1)})
-                changed_region = re_original_region.search(entry)
-                if changed_region:
-                    results.update({"ORIGINAL_REGION": changed_region.group(1)})
-                continue
-        if not priiloader_found:
-            if priiloader_detect in entry:
-                results.update({"Priiloader": True})
-        if not drive_date_found:
-            match = re_drive_date_detect.search(entry)
-            if match:
-                results.update({"DRIVEDATE": match.group(1)})
-        match = re_ios_tid.search(entry)
-        if match:
-            try:
-                ios_tid = int(match.group(1))
-            except ValueError:
-                continue
-        else:
-            continue
-        if vwii_detect in entry:
-            return None  # Not supported
-        if stub_detect in entry:
-            results.update({ios_tid: (IOSType.STUB, None)})
-            continue
-        if patch_no_patches_detect in entry:
-            results.update({ios_tid: (IOSType.ACTIVE, None)})
-            continue
-        if (
-            ios_tid == 58 and patch_usb_2_detect in entry
-        ):  # Special case, IOS 58 has USB 2.0 "Patch" normally, but don't continue immediately because it may have other patches making it a cIOS
-            results.update({ios_tid: (IOSType.ACTIVE, None)})
-        if (
-            (patch_nand_access_detect in entry)
-            or (patch_eticket_services_detect in entry)
-            or (patch_trucha_patch_detect in entry)
-            or (ios_tid != 58 and patch_usb_2_detect in entry)
-        ):
-            results.update({ios_tid: cios_detect(entry)})
-        if ios_tid == 254 and bootmii_ios_detect in entry:
-            results.update({ios_tid: (IOSType.BOOTMII_IOS, None)})
+        try:
+            results.update(process_line_syscheck(entry))
+        except:
+            pass
     return results
 
 
